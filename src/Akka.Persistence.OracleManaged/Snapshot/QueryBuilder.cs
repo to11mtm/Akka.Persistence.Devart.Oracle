@@ -1,0 +1,109 @@
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Text;
+using Akka.Persistence.Sql.Common.Snapshot;
+using Oracle.ManagedDataAccess.Client;
+
+namespace Akka.Persistence.OracleManaged.Snapshot
+{
+    internal class DefaultSnapshotQueryBuilder : ISnapshotQueryBuilder
+    {
+        private readonly string _deleteSql;
+        private readonly string _insertSql;
+        private readonly string _selectSql;
+
+        public DefaultSnapshotQueryBuilder(string schemaName, string tableName)
+        {
+            _deleteSql = @"DELETE FROM {0}.{1} WHERE CS_PID = CHECKSUM(@PersistenceId) ".QuoteSchemaAndTable(schemaName, tableName);
+            _insertSql = @"INSERT INTO {0}.{1} (PersistenceId, SequenceNr, Timestamp, SnapshotType, Snapshot) VALUES (@PersistenceId, @SequenceNr, @Timestamp, @SnapshotType, @Snapshot)".QuoteSchemaAndTable(schemaName, tableName);
+            _selectSql = @"SELECT PersistenceId, SequenceNr, Timestamp, SnapshotType, Snapshot FROM {0}.{1} WHERE CS_PID = CHECKSUM(@PersistenceId)".QuoteSchemaAndTable(schemaName, tableName);
+        }
+
+        public DbCommand DeleteOne(string persistenceId, long sequenceNr, DateTime timestamp)
+        {
+            var oracleCommand = new OracleCommand();
+            oracleCommand.Parameters.Add(new OracleParameter("@PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+            var sb = new StringBuilder(_deleteSql);
+
+            if (sequenceNr < long.MaxValue && sequenceNr > 0)
+            {
+                sb.Append(@"AND SequenceNr = @SequenceNr ");
+                oracleCommand.Parameters.Add(new OracleParameter("@SequenceNr", OracleDbType.Decimal) { Value = sequenceNr });
+            }
+
+            if (timestamp > DateTime.MinValue && timestamp < DateTime.MaxValue)
+            {
+                sb.Append(@"AND Timestamp = @Timestamp");
+                oracleCommand.Parameters.Add(new OracleParameter("@Timestamp", OracleDbType.TimeStampTZ) { Value = timestamp });
+            }
+
+            oracleCommand.CommandText = sb.ToString();
+
+            return oracleCommand;
+        }
+
+        public DbCommand DeleteMany(string persistenceId, long maxSequenceNr, DateTime maxTimestamp)
+        {
+            var oracleCommand = new OracleCommand();
+            oracleCommand.Parameters.Add(new OracleParameter("@PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+            var sb = new StringBuilder(_deleteSql);
+
+            if (maxSequenceNr < long.MaxValue && maxSequenceNr > 0)
+            {
+                sb.Append(@" AND SequenceNr <= @SequenceNr ");
+                oracleCommand.Parameters.Add(new OracleParameter("@SequenceNr", OracleDbType.Decimal) { Value = maxSequenceNr });
+            }
+
+            if (maxTimestamp > DateTime.MinValue && maxTimestamp < DateTime.MaxValue)
+            {
+                sb.Append(@" AND Timestamp <= @Timestamp");
+                oracleCommand.Parameters.Add(new OracleParameter("@Timestamp", OracleDbType.TimeStampTZ) { Value = maxTimestamp });
+            }
+
+            oracleCommand.CommandText = sb.ToString();
+
+            return oracleCommand;
+        }
+
+        public DbCommand InsertSnapshot(SnapshotEntry entry)
+        {
+            var oracleCommand = new OracleCommand(_insertSql)
+            {
+                Parameters =
+                {
+                    new OracleParameter("@PersistenceId", OracleDbType.NVarchar2, entry.PersistenceId.Length) { Value = entry.PersistenceId },
+                    new OracleParameter("@SequenceNr", OracleDbType.Decimal) { Value = entry.SequenceNr },
+                    new OracleParameter("@Timestamp", OracleDbType.TimeStampTZ) { Value = entry.Timestamp },
+                    new OracleParameter("@SnapshotType", OracleDbType.NVarchar2, entry.SnapshotType.Length) { Value = entry.SnapshotType },
+                    new OracleParameter("@Snapshot", OracleDbType.LongRaw, entry.Snapshot.Length) { Value = entry.Snapshot }
+                }
+            };
+
+            return oracleCommand;
+        }
+
+        public DbCommand SelectSnapshot(string persistenceId, long maxSequenceNr, DateTime maxTimestamp)
+        {
+            var oracleCommand = new OracleCommand();
+            oracleCommand.Parameters.Add(new OracleParameter("@PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+
+            var sb = new StringBuilder(_selectSql);
+            if (maxSequenceNr > 0 && maxSequenceNr < long.MaxValue)
+            {
+                sb.Append(" AND SequenceNr <= @SequenceNr ");
+                oracleCommand.Parameters.Add(new OracleParameter("@SequenceNr", OracleDbType.Decimal) { Value = maxSequenceNr });
+            }
+
+            if (maxTimestamp > DateTime.MinValue && maxTimestamp < DateTime.MaxValue)
+            {
+                sb.Append(" AND Timestamp <= @Timestamp ");
+                oracleCommand.Parameters.Add(new OracleParameter("@Timestamp", OracleDbType.TimeStampTZ) { Value = maxTimestamp });
+            }
+
+            sb.Append(" ORDER BY SequenceNr DESC");
+            oracleCommand.CommandText = sb.ToString();
+            return oracleCommand;
+        }
+    }
+}
