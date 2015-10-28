@@ -1,0 +1,16 @@
+source https://nuget.org/api/v2
+nuget Akka.Persistence.Sql.Common
+nuget Oracle.ManagedDataAccess
+
+group Build
+	source https://nuget.org/api/v2
+	nuget FAKE
+
+group Test
+	source https://nuget.org/api/v2
+
+	nuget TestStack.BDDfy
+	nuget xunit
+	nuget FluentAssertions
+	nuget Akka.Persistence.TestKit
+	nuget xunit.runner.console

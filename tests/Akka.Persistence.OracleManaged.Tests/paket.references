@@ -1,0 +1,8 @@
+Oracle.ManagedDataAccess
+Akka.Persistence.Sql.Common
+
+group Test
+TestStack.BDDfy
+xunit
+FluentAssertions
+Akka.Persistence.TestKit
