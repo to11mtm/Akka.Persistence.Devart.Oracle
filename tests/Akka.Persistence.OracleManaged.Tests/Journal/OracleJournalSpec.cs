@@ -1,4 +1,6 @@
-﻿namespace Akka.Persistence.OracleManaged.Journal
+﻿using Xunit;
+
+namespace Akka.Persistence.OracleManaged.Journal
 {
     using Akka.Configuration;
     using Akka.Persistence.TestKit.Journal;
