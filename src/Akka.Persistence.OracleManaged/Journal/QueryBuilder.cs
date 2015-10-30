@@ -23,7 +23,7 @@
 
             _insertMessagesSql = "INSERT INTO {0}.{1} (PersistenceID, SequenceNr, IsDeleted, PayloadType, Payload) VALUES (@PersistenceId, @SequenceNr, @IsDeleted, @PayloadType, @Payload)"
                 .QuoteSchemaAndTable(_schemaName, _tableName);
-            _selectHighestSequenceNrSql = @"SELECT MAX(SequenceNr) FROM {0}.{1} WHERE CS_PID = CHECKSUM(@pid)".QuoteSchemaAndTable(_schemaName, _tableName);
+            _selectHighestSequenceNrSql = @"SELECT MAX(SequenceNr) FROM {0}.{1} WHERE CS_PID = ORA_HASH(@pid)".QuoteSchemaAndTable(_schemaName, _tableName);
         }
 
         public DbCommand SelectMessages(string persistenceId, long fromSequenceNr, long toSequenceNr, long max)
@@ -52,7 +52,7 @@
             var command = new OracleCommand(_insertMessagesSql);
             command.Parameters.Add("@PersistenceId", SqlDbType.NVarChar);
             command.Parameters.Add("@SequenceNr", SqlDbType.BigInt);
-            command.Parameters.Add("@IsDeleted", SqlDbType.Bit);
+            command.Parameters.Add("@IsDeleted", SqlDbType.Char);
             command.Parameters.Add("@PayloadType", SqlDbType.NVarChar);
             command.Parameters.Add("@Payload", SqlDbType.VarBinary);
 
@@ -80,10 +80,10 @@
             }
             else
             {
-                sqlBuilder.Append("UPDATE {0}.{1} SET IsDeleted = 1 ".QuoteSchemaAndTable(_schemaName, _tableName));
+                sqlBuilder.Append("UPDATE {0}.{1} SET IsDeleted = 'Y' ".QuoteSchemaAndTable(_schemaName, _tableName));
             }
 
-            sqlBuilder.Append("WHERE CS_PID = CHECKSUM(@pid)");
+            sqlBuilder.Append("WHERE CS_PID = ORA_HASH(@pid)");
 
             if (toSequenceNr != long.MaxValue)
             {
@@ -104,7 +104,7 @@
                     IsDeleted,
                     PayloadType,
                     Payload ", max != long.MaxValue ? "TOP " + max : string.Empty)
-                .Append(" FROM {0}.{1} WHERE CS_PID = CHECKSUM(@pid)".QuoteSchemaAndTable(_schemaName, _tableName));
+                .Append(" FROM {0}.{1} WHERE CS_PID = ORA_HASH(@pid)".QuoteSchemaAndTable(_schemaName, _tableName));
 
             // since we guarantee type of fromSequenceNr, toSequenceNr and max
             // we can inline them without risk of SQL injection

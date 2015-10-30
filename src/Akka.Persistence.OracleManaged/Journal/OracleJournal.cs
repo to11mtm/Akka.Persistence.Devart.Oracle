@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Akka.Persistence.Journal;
 using Akka.Persistence.Sql.Common;
@@ -9,12 +8,14 @@ using Akka.Persistence.Sql.Common.Journal;
 
 namespace Akka.Persistence.OracleManaged.Journal
 {
+    using Oracle.ManagedDataAccess.Client;
+
     /// <summary>
     /// Specialization of the <see cref="JournalDbEngine"/> which uses SQL Server as it's sql backend database.
     /// </summary>
-    public class SqlJournalEngine : JournalDbEngine
+    public class OracleJournalEngine : JournalDbEngine
     {
-        public SqlJournalEngine(JournalSettings journalSettings, Akka.Serialization.Serialization serialization)
+        public OracleJournalEngine(JournalSettings journalSettings, Akka.Serialization.Serialization serialization)
             : base(journalSettings, serialization)
         {
             QueryBuilder = new DefaultJournalQueryBuilder(journalSettings.TableName, journalSettings.SchemaName);
@@ -22,7 +23,7 @@ namespace Akka.Persistence.OracleManaged.Journal
 
         protected override DbConnection CreateDbConnection()
         {
-            return new SqlConnection(Settings.ConnectionString);
+            return new OracleConnection(Settings.ConnectionString);
         }
 
         protected override void CopyParamsToCommand(DbCommand sqlCommand, JournalEntry entry)
@@ -57,7 +58,7 @@ namespace Akka.Persistence.OracleManaged.Journal
         {
             get
             {
-                return _engine ?? (_engine = new SqlJournalEngine(_extension.JournalSettings, Context.System.Serialization));
+                return _engine ?? (_engine = new OracleJournalEngine(_extension.JournalSettings, Context.System.Serialization));
             }
         }
 
@@ -115,7 +116,7 @@ namespace Akka.Persistence.OracleManaged.Journal
         {
             get
             {
-                return _engine ?? (_engine = new SqlJournalEngine(_extension.JournalSettings, Context.System.Serialization));
+                return _engine ?? (_engine = new OracleJournalEngine(_extension.JournalSettings, Context.System.Serialization));
             }
         }
 

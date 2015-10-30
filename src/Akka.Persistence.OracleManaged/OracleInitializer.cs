@@ -15,8 +15,9 @@
 	                SequenceNr NUMBER(19) NOT NULL,
 	                IsDeleted CHAR(1) NOT NULL,
                     PayloadType NVARCHAR2(500) NOT NULL,
-	                Payload LONG RAW NOT NULL
-                    CONSTRAINT PK_{3} PRIMARY KEY (PersistenceID, SequenceNr)
+	                Payload LONG RAW NOT NULL,
+                    CONSTRAINT PK_{3} PRIMARY KEY (PersistenceID, SequenceNr),
+                    CONSTRAINT CK_{3}_IsDeleted IsDeleted IN ('Y','N')
                 );
                 CREATE INDEX IX_{3}_CS_PID ON {0}.{1}(CS_PID);
                 CREATE INDEX IX_{3}_SequenceNr ON {0}.{1}(SequenceNr);
