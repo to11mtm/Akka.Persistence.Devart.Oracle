@@ -31,7 +31,39 @@ namespace Akka.Persistence.OracleManaged
 
             public void TearDown()
             {
-                DbUtils.Clean("EventJournal_Test");
+                DbUtils.Clean(TableName);
+            }
+
+            [Fact]
+            public void Execute()
+            {
+                this.BDDfy();
+            }
+        }
+
+        public class CreatingSnapshotTables
+        {
+            private string _connectionString;
+            private const string TableName = "SnapshotStore_Test";
+
+            public void GivenTestDbConnectionDetails()
+            {
+                _connectionString = ConfigurationManager.ConnectionStrings["TestDb"].ConnectionString;
+            }
+
+            public void WhenCreatingSnapshotTable()
+            {
+                OracleInitializer.CreateOracleSnapshotStoreTables(_connectionString, "akka_persist_tests", TableName);
+            }
+
+            public void ThenTheTableShouldExist()
+            {
+                DbUtils.CheckIfTableExists(TableName).Should().BeTrue();
+            }
+
+            public void TearDown()
+            {
+                DbUtils.Clean(TableName);
             }
 
             [Fact]

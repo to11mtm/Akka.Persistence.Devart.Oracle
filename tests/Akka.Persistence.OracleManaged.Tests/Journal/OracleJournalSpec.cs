@@ -19,7 +19,7 @@ namespace Akka.Persistence.OracleManaged.Journal
                             oracle-managed {
                                 class = ""Akka.Persistence.OracleManaged.Journal.OracleJournal, Akka.Persistence.OracleManaged""
                                 plugin-dispatcher = ""akka.actor.default-dispatcher""
-                                table-name = EventJournal
+                                table-name = Spec-EventJournal
                                 schema-name = akka_persist_tests
                                 auto-initialize = on
                                 connection-string-name = ""TestDb""
@@ -38,7 +38,7 @@ namespace Akka.Persistence.OracleManaged.Journal
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            DbUtils.Clean();
+            DbUtils.Clean("Spec-EventJournal");
         }
     }
 }

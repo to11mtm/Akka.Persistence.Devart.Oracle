@@ -17,7 +17,7 @@ GROUP Build
 NUGET
   remote: https://www.nuget.org/api/v2
   specs:
-    FAKE (4.7.2)
+    FAKE (4.11.3)
 
 GROUP Test
 NUGET
@@ -46,7 +46,7 @@ NUGET
       xunit.assert (>= 2.0.0)
       xunit.core (>= 2.0.0)
       xunit.extensibility.core (>= 2.0.0)
-    FluentAssertions (4.0.1)
+    FluentAssertions (4.1.1)
       System.Collections (>= 4.0.10) - framework: dnxcore50
       System.Diagnostics.Debug (>= 4.0.10) - framework: dnxcore50
       System.Globalization (>= 4.0.10) - framework: dnxcore50
