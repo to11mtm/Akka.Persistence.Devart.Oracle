@@ -1,4 +1,5 @@
 ﻿using Xunit;
+using Xunit.Abstractions;
 
 namespace Akka.Persistence.OracleManaged.Journal
 {
@@ -19,9 +20,9 @@ namespace Akka.Persistence.OracleManaged.Journal
                                 class = ""Akka.Persistence.OracleManaged.Journal.OracleJournal, Akka.Persistence.OracleManaged""
                                 plugin-dispatcher = ""akka.actor.default-dispatcher""
                                 table-name = EventJournal
-                                schema-name = dbo
+                                schema-name = akka_persist_tests
                                 auto-initialize = on
-                                connection-string = ""Data Source=localhost\\SQLEXPRESS;Database=akka_persistence_tests;User Id=akkadotnet;Password=akkadotnet;""
+                                connection-string-name = ""TestDb""
                             }
                         }
                     }";
@@ -29,9 +30,15 @@ namespace Akka.Persistence.OracleManaged.Journal
             SpecConfig = ConfigurationFactory.ParseString(specString);
         }
 
-        public OracleJournalSpec():base(Config)
+        public OracleJournalSpec(ITestOutputHelper output) :base(Config, "OracleJournalSpec", output)
         {
             Initialize();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            DbUtils.Clean();
         }
     }
 }

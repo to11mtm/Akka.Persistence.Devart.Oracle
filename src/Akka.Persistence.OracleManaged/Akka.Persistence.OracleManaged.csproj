@@ -42,6 +42,7 @@
     <Content Include="net40\Web.config.uninstall.xdt">
       <Paket>True</Paket>
     </Content>
+    <EmbeddedResource Include="Sql\create_journal_table.sql" />
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -53,6 +54,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.custom.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="InternalExtensions.cs" />
     <Compile Include="Journal\QueryBuilder.cs" />
