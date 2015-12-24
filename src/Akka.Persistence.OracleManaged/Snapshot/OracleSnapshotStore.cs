@@ -1,5 +1,5 @@
 ﻿using System.Data.Common;
-using System.Data.SqlClient;
+using Oracle.ManagedDataAccess.Client;
 using Akka.Persistence.Sql.Common;
 using Akka.Persistence.Sql.Common.Snapshot;
 
@@ -8,21 +8,21 @@ namespace Akka.Persistence.OracleManaged.Snapshot
     /// <summary>
     /// Actor used for storing incoming snapshots into persistent snapshot store backed by SQL Server database.
     /// </summary>
-    public class OracleSnapshotStore : DbSnapshotStore
+    public class OracleSnapshotStore : SqlSnapshotStore
     {
-        private readonly OracleSnapshotSettings _settings;
+        private readonly OraclePersistence _extension;
 
         public OracleSnapshotStore() : base()
         {
-            _settings = OraclePersistence.Instance.Apply(Context.System).SnapshotStoreSettings;
-            QueryBuilder = new DefaultSnapshotQueryBuilder(_settings.SchemaName, _settings.TableName);
+            _extension = OraclePersistence.Get(Context.System);
+            QueryBuilder = new OracleSnapshotQueryBuilder(_extension.SnapshotSettings);
+            QueryMapper = new OracleQueryMapper(Context.System.Serialization);
         }
 
-        protected override SnapshotStoreSettings Settings { get { return _settings; } }
-
-        protected override DbConnection CreateDbConnection()
+        protected override DbConnection CreateDbConnection(string connectionString)
         {
-            return new SqlConnection(Settings.ConnectionString);
+            return new OracleConnection(Settings.ConnectionString);
         }
+        protected override SnapshotStoreSettings Settings { get { return _extension.SnapshotSettings; } }        
     }
 }

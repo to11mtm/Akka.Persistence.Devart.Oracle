@@ -7,17 +7,19 @@ using Oracle.ManagedDataAccess.Client;
 
 namespace Akka.Persistence.OracleManaged.Snapshot
 {
-    internal class DefaultSnapshotQueryBuilder : ISnapshotQueryBuilder
+    internal class OracleSnapshotQueryBuilder : ISnapshotQueryBuilder
     {
         private readonly string _deleteSql;
         private readonly string _insertSql;
         private readonly string _selectSql;
 
-        public DefaultSnapshotQueryBuilder(string schemaName, string tableName)
+        public OracleSnapshotQueryBuilder(OracleSnapshotSettings settings)
         {
-            _deleteSql = @"DELETE FROM {0}.{1} WHERE CS_PID = CHECKSUM(@PersistenceId) ".QuoteSchemaAndTable(schemaName, tableName);
-            _insertSql = @"INSERT INTO {0}.{1} (PersistenceId, SequenceNr, Timestamp, SnapshotType, Snapshot) VALUES (@PersistenceId, @SequenceNr, @Timestamp, @SnapshotType, @Snapshot)".QuoteSchemaAndTable(schemaName, tableName);
-            _selectSql = @"SELECT PersistenceId, SequenceNr, Timestamp, SnapshotType, Snapshot FROM {0}.{1} WHERE CS_PID = CHECKSUM(@PersistenceId)".QuoteSchemaAndTable(schemaName, tableName);
+            var schemaName = settings.SchemaName;
+            var tableName = settings.TableName;
+            _deleteSql = @"DELETE FROM {0}.{1} WHERE PersistenceId = @PersistenceId ".QuoteSchemaAndTable(schemaName, tableName);
+            _insertSql = @"INSERT INTO {0}.{1} (PersistenceId, SequenceNr, Timestamp, Manifest, Snapshot) VALUES (@PersistenceId, @SequenceNr, @Timestamp, @Manifest, @Snapshot)".QuoteSchemaAndTable(schemaName, tableName);
+            _selectSql = @"SELECT PersistenceId, SequenceNr, Timestamp, Manifest, Snapshot FROM {0}.{1} WHERE PersistenceId = @PersistenceId".QuoteSchemaAndTable(schemaName, tableName);
         }
 
         public DbCommand DeleteOne(string persistenceId, long sequenceNr, DateTime timestamp)
@@ -75,7 +77,7 @@ namespace Akka.Persistence.OracleManaged.Snapshot
                     new OracleParameter("@PersistenceId", OracleDbType.NVarchar2, entry.PersistenceId.Length) { Value = entry.PersistenceId },
                     new OracleParameter("@SequenceNr", OracleDbType.Decimal) { Value = entry.SequenceNr },
                     new OracleParameter("@Timestamp", OracleDbType.TimeStampTZ) { Value = entry.Timestamp },
-                    new OracleParameter("@SnapshotType", OracleDbType.NVarchar2, entry.SnapshotType.Length) { Value = entry.SnapshotType },
+                    new OracleParameter("@Manifest", OracleDbType.NVarchar2, entry.SnapshotType.Length) { Value = entry.SnapshotType },
                     new OracleParameter("@Snapshot", OracleDbType.LongRaw, entry.Snapshot.Length) { Value = entry.Snapshot }
                 }
             };

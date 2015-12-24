@@ -1,29 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Threading.Tasks;
-using Akka.Persistence.Journal;
-using Akka.Persistence.Sql.Common;
+﻿using System.Data.Common;
+using Oracle.ManagedDataAccess.Client;
+using Akka.Actor;
 using Akka.Persistence.Sql.Common.Journal;
 
 namespace Akka.Persistence.OracleManaged.Journal
-{
-    using Oracle.ManagedDataAccess.Client;
-
+{    
     /// <summary>
-    /// Specialization of the <see cref="JournalDbEngine"/> which uses SQL Server as it's sql backend database.
+    /// Specialization of the <see cref="JournalDbEngine"/> which uses Oracle as it's sql backend database.
     /// </summary>
     public class OracleJournalEngine : JournalDbEngine
     {
-        public OracleJournalEngine(JournalSettings journalSettings, Akka.Serialization.Serialization serialization)
-            : base(journalSettings, serialization)
+        public OracleJournalEngine(ActorSystem system)
+            : base(system)
         {
-            QueryBuilder = new DefaultJournalQueryBuilder(journalSettings.TableName, journalSettings.SchemaName);
+            QueryBuilder = new OracleJournalQueryBuilder(Settings.TableName, Settings.SchemaName);
         }
 
-        protected override DbConnection CreateDbConnection()
+        protected override string JournalConfigPath { get { return OracleJournalSettings.ConfigPath; } }
+
+        protected override DbConnection CreateDbConnection(string connectionString)
         {
-            return new OracleConnection(Settings.ConnectionString);
+            return new OracleConnection(connectionString);
         }
 
         protected override void CopyParamsToCommand(DbCommand sqlCommand, JournalEntry entry)
@@ -31,125 +28,21 @@ namespace Akka.Persistence.OracleManaged.Journal
             sqlCommand.Parameters["@PersistenceId"].Value = entry.PersistenceId;
             sqlCommand.Parameters["@SequenceNr"].Value = entry.SequenceNr;
             sqlCommand.Parameters["@IsDeleted"].Value = entry.IsDeleted;
-            sqlCommand.Parameters["@PayloadType"].Value = entry.PayloadType;
+            sqlCommand.Parameters["@Manifest"].Value = entry.Manifest;
+            sqlCommand.Parameters["@Timestamp"].Value = entry.Timestamp;
             sqlCommand.Parameters["@Payload"].Value = entry.Payload;
         }
     }
 
     /// <summary>
-    /// Persistent journal actor using SQL Server as persistence layer. It processes write requests
+    /// Persistent journal actor using Oracle as persistence layer. It processes write requests
     /// one by one in asynchronous manner, while reading results asynchronously.
     /// </summary>
-    public class OracleJournal : AsyncWriteJournal
+    public class OracleJournal : SqlJournal
     {
-        private readonly OraclePersistenceExtension _extension;
-
-        private JournalDbEngine _engine;
-
-        public OracleJournal()
+        public readonly OraclePersistence Extension = OraclePersistence.Get(Context.System);
+        public OracleJournal() : base(new OracleJournalEngine(Context.System))
         {
-            _extension = OraclePersistence.Instance.Apply(Context.System);
         }
-
-        /// <summary>
-        /// Gets an engine instance responsible for handling all database-related journal requests.
-        /// </summary>
-        protected virtual JournalDbEngine Engine
-        {
-            get
-            {
-                return _engine ?? (_engine = new OracleJournalEngine(_extension.JournalSettings, Context.System.Serialization));
-            }
-        }
-
-        protected override void PreStart()
-        {
-            base.PreStart();
-            Engine.Open();
-        }
-
-        protected override void PostStop()
-        {
-            base.PostStop();
-            Engine.Close();
-        }
-
-        public override Task ReplayMessagesAsync(string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> replayCallback)
-        {
-            return Engine.ReplayMessagesAsync(persistenceId, fromSequenceNr, toSequenceNr, max, Context.Sender, replayCallback);
-        }
-
-        public override Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
-        {
-            return Engine.ReadHighestSequenceNrAsync(persistenceId, fromSequenceNr);
-        }
-
-        protected override Task WriteMessagesAsync(IEnumerable<IPersistentRepresentation> messages)
-        {
-            return Engine.WriteMessagesAsync(messages);
-        }
-
-        protected override Task DeleteMessagesToAsync(string persistenceId, long toSequenceNr, bool isPermanent)
-        {
-            return Engine.DeleteMessagesToAsync(persistenceId, toSequenceNr, isPermanent);
-        }
-    }
-
-    /// <summary>
-    /// Persistent journal actor using SQL Server as persistence layer. It processes write requests
-    /// one by one in synchronous manner, while reading results asynchronously. Use for tests only.
-    /// </summary>
-    public class SyncOracleJournal : SyncWriteJournal
-    {
-        private readonly OraclePersistenceExtension _extension;
-        private JournalDbEngine _engine;
-
-        public SyncOracleJournal()
-        {
-            _extension = OraclePersistence.Instance.Apply(Context.System);
-        }
-
-        /// <summary>
-        /// Gets an engine instance responsible for handling all database-related journal requests.
-        /// </summary>
-        protected virtual JournalDbEngine Engine
-        {
-            get
-            {
-                return _engine ?? (_engine = new OracleJournalEngine(_extension.JournalSettings, Context.System.Serialization));
-            }
-        }
-
-        protected override void PreStart()
-        {
-            base.PreStart();
-            Engine.Open();
-        }
-
-        protected override void PostStop()
-        {
-            base.PostStop();
-            Engine.Close();
-        }
-
-        public override Task ReplayMessagesAsync(string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> replayCallback)
-        {
-            return Engine.ReplayMessagesAsync(persistenceId, fromSequenceNr, toSequenceNr, max, Context.Sender, replayCallback);
-        }
-
-        public override Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
-        {
-            return Engine.ReadHighestSequenceNrAsync(persistenceId, fromSequenceNr);
-        }
-
-        public override void WriteMessages(IEnumerable<IPersistentRepresentation> messages)
-        {
-            Engine.WriteMessages(messages);
-        }
-
-        public override void DeleteMessagesTo(string persistenceId, long toSequenceNr, bool isPermanent)
-        {
-            Engine.DeleteMessagesTo(persistenceId, toSequenceNr, isPermanent);
-        }
-    }
+    }    
 }

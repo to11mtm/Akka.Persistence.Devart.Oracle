@@ -1,4 +1,6 @@
-﻿using Akka.Actor;
+﻿using System;
+using System.Configuration;
+using Akka.Actor;
 using Akka.Configuration;
 using Akka.Persistence.Sql.Common;
 
@@ -38,8 +40,22 @@ namespace Akka.Persistence.OracleManaged
     /// <summary>
     /// An actor system extension initializing support for SQL Server persistence layer.
     /// </summary>
-    public class OraclePersistenceExtension : IExtension
+    public class OraclePersistence : IExtension
     {
+        /// <summary>
+        /// Returns a default configuration for akka persistence Oracle-based journals and snapshot stores.
+        /// </summary>
+        /// <returns></returns>
+        public static Config DefaultConfiguration()
+        {
+            return ConfigurationFactory.FromResource<OraclePersistence>("Akka.Persistence.Oracle.oracle-managed.conf");
+        }
+
+        public static OraclePersistence Get(ActorSystem system)
+        {
+            return system.WithExtension<OraclePersistence, OraclePersistenceProvider>();
+        }
+
         /// <summary>
         /// Journal-related settings loaded from HOCON configuration.
         /// </summary>
@@ -48,61 +64,48 @@ namespace Akka.Persistence.OracleManaged
         /// <summary>
         /// Snapshot store related settings loaded from HOCON configuration.
         /// </summary>
-        public readonly OracleSnapshotSettings SnapshotStoreSettings;
+        public readonly OracleSnapshotSettings SnapshotSettings;
 
-        public OraclePersistenceExtension(ExtendedActorSystem system)
+        public OraclePersistence(ExtendedActorSystem system)
         {
-            system.Settings.InjectTopLevelFallback(OraclePersistence.DefaultConfiguration());
+            system.Settings.InjectTopLevelFallback(DefaultConfiguration());
 
             JournalSettings = new OracleJournalSettings(system.Settings.Config.GetConfig(OracleJournalSettings.ConfigPath));
-            SnapshotStoreSettings = new OracleSnapshotSettings(system.Settings.Config.GetConfig(OracleSnapshotSettings.ConfigPath));
+            SnapshotSettings = new OracleSnapshotSettings(system.Settings.Config.GetConfig(OracleSnapshotSettings.ConfigPath));
 
             if (JournalSettings.AutoInitialize)
             {
-                OracleInitializer.CreateOracleJournalTables(JournalSettings.ConnectionString, JournalSettings.SchemaName, JournalSettings.TableName);
+                var connectionString = string.IsNullOrEmpty(JournalSettings.ConnectionString)
+                    ? ConfigurationManager.ConnectionStrings[JournalSettings.ConnectionStringName].ConnectionString
+                    : JournalSettings.ConnectionString;
+
+                OracleInitializer.CreateOracleJournalTables(connectionString, JournalSettings.SchemaName, JournalSettings.TableName);
             }
 
-            if (SnapshotStoreSettings.AutoInitialize)
+            if (SnapshotSettings.AutoInitialize)
             {
-                OracleInitializer.CreateOracleSnapshotStoreTables(SnapshotStoreSettings.ConnectionString, SnapshotStoreSettings.SchemaName, SnapshotStoreSettings.TableName);
+                var connectionString = string.IsNullOrEmpty(JournalSettings.ConnectionString)
+                    ? ConfigurationManager.ConnectionStrings[JournalSettings.ConnectionStringName].ConnectionString
+                    : JournalSettings.ConnectionString;
+
+                OracleInitializer.CreateOracleSnapshotStoreTables(connectionString, SnapshotSettings.SchemaName, SnapshotSettings.TableName);
             }
         }
     }
 
     /// <summary>
-    /// Singleton class used to setup SQL Server backend for akka persistence plugin.
+    /// Singleton class used to setup Oracle backend for akka persistence plugin.
     /// </summary>
-    public class OraclePersistence : ExtensionIdProvider<OraclePersistenceExtension>
-    {
-        public static readonly OraclePersistence Instance = new OraclePersistence();
-
-        /// <summary>
-        /// Initializes a SQL Server persistence plugin inside provided <paramref name="actorSystem"/>.
-        /// </summary>
-        public static void Init(ActorSystem actorSystem)
-        {
-            Instance.Apply(actorSystem);
-        }
-
-        private OraclePersistence() { }
-        
+    public class OraclePersistenceProvider : ExtensionIdProvider<OraclePersistence>
+    {        
         /// <summary>
         /// Creates an actor system extension for akka persistence SQL Server support.
         /// </summary>
         /// <param name="system"></param>
         /// <returns></returns>
-        public override OraclePersistenceExtension CreateExtension(ExtendedActorSystem system)
+        public override OraclePersistence CreateExtension(ExtendedActorSystem system)
         {
-            return new OraclePersistenceExtension(system);
-        }
-
-        /// <summary>
-        /// Returns a default configuration for akka persistence SQL Server-based journals and snapshot stores.
-        /// </summary>
-        /// <returns></returns>
-        public static Config DefaultConfiguration()
-        {
-            return ConfigurationFactory.FromResource<OraclePersistence>("Akka.Persistence.SqlServer.sql-server.conf");
-        }
+            return new OraclePersistence(system);
+        }        
     }
 }
