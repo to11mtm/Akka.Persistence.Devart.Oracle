@@ -3,9 +3,9 @@ using System.Data;
 using System.Data.Common;
 using System.Text;
 using Akka.Persistence.Sql.Common.Snapshot;
-using Oracle.ManagedDataAccess.Client;
+using Devart.Data.Oracle;
 
-namespace Akka.Persistence.OracleManaged.Snapshot
+namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
     internal class OracleSnapshotQueryBuilder : ISnapshotQueryBuilder
     {
@@ -25,13 +25,13 @@ namespace Akka.Persistence.OracleManaged.Snapshot
         public DbCommand DeleteOne(string persistenceId, long sequenceNr, DateTime timestamp)
         {
             var oracleCommand = new OracleCommand();
-            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarChar, persistenceId.Length) { Value = persistenceId });
             var sb = new StringBuilder(_deleteSql);
 
             if (sequenceNr < long.MaxValue && sequenceNr > 0)
             {
                 sb.Append(@"AND SequenceNr = :SequenceNr ");
-                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Decimal) { Value = sequenceNr });
+                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Number) { Value = sequenceNr });
             }
 
             if (timestamp > DateTime.MinValue && timestamp < DateTime.MaxValue)
@@ -48,13 +48,13 @@ namespace Akka.Persistence.OracleManaged.Snapshot
         public DbCommand DeleteMany(string persistenceId, long maxSequenceNr, DateTime maxTimestamp)
         {
             var oracleCommand = new OracleCommand();
-            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarChar, persistenceId.Length) { Value = persistenceId });
             var sb = new StringBuilder(_deleteSql);
 
             if (maxSequenceNr < long.MaxValue && maxSequenceNr > 0)
             {
                 sb.Append(@" AND SequenceNr <= :SequenceNr ");
-                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Decimal) { Value = maxSequenceNr });
+                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Number) { Value = maxSequenceNr });
             }
 
             if (maxTimestamp > DateTime.MinValue && maxTimestamp < DateTime.MaxValue)
@@ -74,10 +74,10 @@ namespace Akka.Persistence.OracleManaged.Snapshot
             {
                 Parameters =
                 {
-                    new OracleParameter(":PersistenceId", OracleDbType.NVarchar2, entry.PersistenceId.Length) { Value = entry.PersistenceId },
-                    new OracleParameter(":SequenceNr", OracleDbType.Decimal) { Value = entry.SequenceNr },
+                    new OracleParameter(":PersistenceId", OracleDbType.NVarChar, entry.PersistenceId.Length) { Value = entry.PersistenceId },
+                    new OracleParameter(":SequenceNr", OracleDbType.Number) { Value = entry.SequenceNr },
                     new OracleParameter(":Timestamp", OracleDbType.TimeStampTZ) { Value = entry.Timestamp },
-                    new OracleParameter(":Manifest", OracleDbType.NVarchar2, entry.SnapshotType.Length) { Value = entry.SnapshotType },
+                    new OracleParameter(":Manifest", OracleDbType.NVarChar, entry.SnapshotType.Length) { Value = entry.SnapshotType },
                     new OracleParameter(":Snapshot", OracleDbType.LongRaw, entry.Snapshot.Length) { Value = entry.Snapshot }
                 }
             };
@@ -88,13 +88,13 @@ namespace Akka.Persistence.OracleManaged.Snapshot
         public DbCommand SelectSnapshot(string persistenceId, long maxSequenceNr, DateTime maxTimestamp)
         {
             var oracleCommand = new OracleCommand();
-            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarchar2, persistenceId.Length) { Value = persistenceId });
+            oracleCommand.Parameters.Add(new OracleParameter(":PersistenceId", OracleDbType.NVarChar, persistenceId.Length) { Value = persistenceId });
 
             var sb = new StringBuilder(_selectSql);
             if (maxSequenceNr > 0 && maxSequenceNr < long.MaxValue)
             {
                 sb.Append(" AND SequenceNr <= :SequenceNr ");
-                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Decimal) { Value = maxSequenceNr });
+                oracleCommand.Parameters.Add(new OracleParameter(":SequenceNr", OracleDbType.Number) { Value = maxSequenceNr });
             }
 
             if (maxTimestamp > DateTime.MinValue && maxTimestamp < DateTime.MaxValue)

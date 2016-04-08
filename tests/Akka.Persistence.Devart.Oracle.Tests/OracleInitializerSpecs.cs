@@ -1,11 +1,10 @@
 ﻿using System.Configuration;
 using System.Data;
 using FluentAssertions;
-using Oracle.ManagedDataAccess.Client;
 using TestStack.BDDfy;
 using Xunit;
 
-namespace Akka.Persistence.OracleManaged
+namespace Akka.Persistence.Devart.Oracle
 {
     public class OracleInitializerSpecs
     {

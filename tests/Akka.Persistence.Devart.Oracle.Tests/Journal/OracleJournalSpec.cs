@@ -1,7 +1,7 @@
 ﻿using Xunit;
 using Xunit.Abstractions;
 
-namespace Akka.Persistence.OracleManaged.Journal
+namespace Akka.Persistence.Devart.Oracle.Journal
 {
     using Akka.Configuration;
     using Akka.Persistence.TestKit.Journal;
@@ -17,7 +17,7 @@ namespace Akka.Persistence.OracleManaged.Journal
                         journal {
                             plugin = ""akka.persistence.journal.oracle-managed""
                             oracle-managed {
-                                class = ""Akka.Persistence.OracleManaged.Journal.OracleJournal, Akka.Persistence.OracleManaged""
+                                class = ""Akka.Persistence.Devart.Oracle.Journal.OracleJournal, Akka.Persistence.Devart.Oracle""
                                 plugin-dispatcher = ""akka.actor.default-dispatcher""
                                 table-name = Spec-EventJournal
                                 schema-name = akka_persist_tests

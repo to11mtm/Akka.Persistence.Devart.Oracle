@@ -1,12 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Persistence.OracleManaged", "src\Akka.Persistence.OracleManaged\Akka.Persistence.OracleManaged.csproj", "{55B3C75B-12A7-4552-AD09-4AF83D53306E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Persistence.OracleManaged.Tests", "tests\Akka.Persistence.OracleManaged.Tests\Akka.Persistence.OracleManaged.Tests.csproj", "{C3C49DB5-EF1E-4C33-96A3-7247C73DA2E6}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{E316776F-F135-468A-AD5C-49DD51D0965E}"
 	ProjectSection(SolutionItems) = preProject
 		paket.dependencies = paket.dependencies
@@ -21,6 +17,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".solution", ".solution", "{
 		README.md = README.md
 		RELEASE_NOTES.md = RELEASE_NOTES.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Persistence.Devart.Oracle", "src\Akka.Persistence.Devart.Oracle\Akka.Persistence.Devart.Oracle.csproj", "{55B3C75B-12A7-4552-AD09-4AF83D53306E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Persistence.Devart.Oracle.Tests", "tests\Akka.Persistence.Devart.Oracle.Tests\Akka.Persistence.Devart.Oracle.Tests.csproj", "{C3C49DB5-EF1E-4C33-96A3-7247C73DA2E6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

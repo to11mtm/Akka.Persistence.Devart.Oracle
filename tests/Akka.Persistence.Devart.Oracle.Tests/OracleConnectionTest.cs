@@ -5,12 +5,12 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Devart.Data.Oracle;
 using FluentAssertions;
-using Oracle.ManagedDataAccess.Client;
 using TestStack.BDDfy;
 using Xunit;
 
-namespace Akka.Persistence.OracleManaged
+namespace Akka.Persistence.Devart.Oracle
 {
     public class OracleConnectionTest
     {

@@ -1,9 +1,9 @@
 ﻿using System.Data.Common;
-using Oracle.ManagedDataAccess.Client;
 using Akka.Persistence.Sql.Common;
 using Akka.Persistence.Sql.Common.Snapshot;
+using Devart.Data.Oracle;
 
-namespace Akka.Persistence.OracleManaged.Snapshot
+namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
     /// <summary>
     /// Actor used for storing incoming snapshots into persistent snapshot store backed by SQL Server database.

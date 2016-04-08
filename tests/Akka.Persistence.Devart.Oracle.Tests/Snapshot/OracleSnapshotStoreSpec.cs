@@ -3,7 +3,7 @@ using Akka.Configuration;
 using Akka.Persistence.TestKit.Snapshot;
 using Xunit.Abstractions;
 
-namespace Akka.Persistence.OracleManaged.Snapshot
+namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
     public class OracleSnapshotStoreSpec:SnapshotStoreSpec
     {
@@ -17,7 +17,7 @@ namespace Akka.Persistence.OracleManaged.Snapshot
                             snapshot-store {
                                 plugin = ""akka.persistence.snapshot-store.oracle-managed""
                                 oracle-managed {
-                                    class = ""Akka.Persistence.OracleManaged.Snapshot.OracleSnapshotStore, Akka.Persistence.OracleManaged""
+                                    class = ""Akka.Persistence.Devart.Oracle.Snapshot.OracleSnapshotStore, Akka.Persistence.Devart.Oracle""
                                     plugin-dispatcher = ""akka.actor.default-dispatcher""
                                     table-name = Spec-SnapshotStore
                                     schema-name = akka_persist_tests

@@ -6,9 +6,9 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Oracle.ManagedDataAccess.Client;
+using Devart.Data.Oracle;
 
-namespace Akka.Persistence.OracleManaged
+namespace Akka.Persistence.Devart.Oracle
 {
     public static class DbUtils
     {
@@ -16,7 +16,7 @@ namespace Akka.Persistence.OracleManaged
         {
             var connectionString = ConfigurationManager.ConnectionStrings["TestDb"].ConnectionString;
             var connectionBuilder = new OracleConnectionStringBuilder(connectionString);
-            var schemaName = connectionBuilder.UserID;
+            var schemaName = connectionBuilder.UserId;
             using (var conn = new OracleConnection(connectionString))
             {
                 conn.Open();
@@ -28,7 +28,7 @@ namespace Akka.Persistence.OracleManaged
         {
             var connectionString = ConfigurationManager.ConnectionStrings["TestDb"].ConnectionString;
             var connectionBuilder = new OracleConnectionStringBuilder(connectionString);
-            var databaseName = connectionBuilder.UserID;
+            var databaseName = connectionBuilder.UserId;
             using (var conn = new OracleConnection(connectionString))
             {
                 conn.Open();

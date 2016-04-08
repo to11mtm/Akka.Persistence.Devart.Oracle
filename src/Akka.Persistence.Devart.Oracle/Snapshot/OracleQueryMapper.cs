@@ -2,7 +2,7 @@
 using System.Data.Common;
 using Akka.Persistence.Sql.Common.Snapshot;
 
-namespace Akka.Persistence.OracleManaged.Snapshot
+namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
     internal class OracleQueryMapper : ISnapshotQueryMapper
     {

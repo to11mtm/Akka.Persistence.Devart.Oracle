@@ -2,10 +2,10 @@
 using System.IO;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using Devart.Data.Oracle;
 
-namespace Akka.Persistence.OracleManaged
+namespace Akka.Persistence.Devart.Oracle
 {
-    using Oracle.ManagedDataAccess.Client;
 
     internal static class InternalExtensions
     {

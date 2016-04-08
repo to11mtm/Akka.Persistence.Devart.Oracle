@@ -23,7 +23,7 @@ open System.IO
 //  - for documentation, you also need to edit info in "docs/tools/generate.fsx"
 // The name of the project
 // (used by attributes in AssemblyInfo, name of a NuGet package and directory in 'src')
-let project = "Akka.Persistence.OracleManaged"
+let project = "Akka.Persistence.Devart.Oracle"
 // Short summary of the project
 // (used as description in AssemblyInfo and as a short summary for NuGet package)
 let summary = "An Oracle Akka.NET Persistence plugin using the Oracle.ManagedDataAccess libraries."
@@ -35,7 +35,7 @@ let authors = [ "Damian Reeves" ]
 // Tags for your project (for NuGet package)
 let tags = "akka"
 // File system information
-let solutionFile = "Akka.Persistence.OracleManaged.sln"
+let solutionFile = "Akka.Persistence.Devart.Oracle.sln"
 // Pattern specifying assemblies to be tested using NUnit
 let testAssemblies = 
   !!"tests/**/bin/Release/*Tests*.dll"
@@ -46,7 +46,7 @@ let testAssemblies =
 let gitOwner = "DamianReeves"
 let gitHome = "https://github.com/" + gitOwner
 // The name of the project on GitHub
-let gitName = "Akka.Persistence.OracleManaged"
+let gitName = "Akka.Persistence.Devart.Oracle"
 // The url for the raw files hosted
 let gitRaw = environVarOrDefault "gitRaw" "https://raw.github.com/DamianReeves"
 // --------------------------------------------------------------------------------------

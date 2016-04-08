@@ -1,9 +1,9 @@
 ﻿using System.Data.Common;
-using Oracle.ManagedDataAccess.Client;
 using Akka.Actor;
 using Akka.Persistence.Sql.Common.Journal;
+using Devart.Data.Oracle;
 
-namespace Akka.Persistence.OracleManaged.Journal
+namespace Akka.Persistence.Devart.Oracle.Journal
 {    
     /// <summary>
     /// Specialization of the <see cref="JournalDbEngine"/> which uses Oracle as it's sql backend database.
@@ -25,12 +25,12 @@ namespace Akka.Persistence.OracleManaged.Journal
 
         protected override void CopyParamsToCommand(DbCommand sqlCommand, JournalEntry entry)
         {
-            sqlCommand.Parameters["@PersistenceId"].Value = entry.PersistenceId;
-            sqlCommand.Parameters["@SequenceNr"].Value = entry.SequenceNr;
-            sqlCommand.Parameters["@IsDeleted"].Value = entry.IsDeleted;
-            sqlCommand.Parameters["@Manifest"].Value = entry.Manifest;
-            sqlCommand.Parameters["@Timestamp"].Value = entry.Timestamp;
-            sqlCommand.Parameters["@Payload"].Value = entry.Payload;
+            sqlCommand.Parameters[":PersistenceId"].Value = entry.PersistenceId;
+            sqlCommand.Parameters[":SequenceNr"].Value = entry.SequenceNr;
+            sqlCommand.Parameters[":IsDeleted"].Value = entry.IsDeleted;
+            sqlCommand.Parameters[":Manifest"].Value = entry.Manifest;
+            sqlCommand.Parameters[":Timestamp"].Value = entry.Timestamp;
+            sqlCommand.Parameters[":Payload"].Value = entry.Payload;
         }
     }
 

@@ -1,2 +1,2 @@
-# Akka.Persistence.OracleManaged
-Akka.Persistence.OracleManaged provider
+# Akka.Persistence.Devart.Oracle
+Akka.Persistence.Devart.Oracle provider
