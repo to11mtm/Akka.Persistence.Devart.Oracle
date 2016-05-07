@@ -71,6 +71,7 @@
     <Compile Include="DbUtils.cs" />
     <Compile Include="OracleConnectionTest.cs" />
     <Compile Include="OracleInitializerSpecs.cs" />
+    <Compile Include="OracleSpecs.cs" />
     <Compile Include="Snapshot\OracleSnapshotStoreSpec.cs" />
     <Compile Include="Journal\OracleJournalSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Xml.Serialization;
 using Akka.Configuration;
 using Akka.Persistence.TestKit.Snapshot;
 using Xunit.Abstractions;
@@ -11,7 +12,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
 
         static OracleSnapshotStoreSpec()
         {
-            var specString = @"
+            var specString = (@"
                         akka.persistence {
                             publish-plugin-commands = on
                             snapshot-store {
@@ -19,20 +20,20 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
                                 devart-oracle {
                                     class = ""Akka.Persistence.Devart.Oracle.Snapshot.OracleSnapshotStore, Akka.Persistence.Devart.Oracle""
                                     plugin-dispatcher = ""akka.actor.default-dispatcher""
-                                    table-name = Spec_SnapshotStore
-                                    schema-name = akka_persist_tests
+                                    table-name = {TABLE_NAME}
+                                    schema-name = {SCHEMA_NAME}
                                     auto-initialize = on
                                     connection-string-name = ""TestDb""
                                 }
                             }
-                        }";
+                        }").Replace("{TABLE_NAME}", OracleSpecs.TableInfo.SnapShotTableName).Replace("{SCHEMA_NAME}",OracleSpecs.TableInfo.SchemaName);
 
             SpecConfig = ConfigurationFactory.ParseString(specString);
 
 
             //need to make sure db is created before the tests start
             //DbUtils.Initialize();
-            DbUtils.Clean("Spec_SnapshotStore");
+            DbUtils.Clean(OracleSpecs.TableInfo.SnapShotTableName);
         }
 
         public OracleSnapshotStoreSpec(ITestOutputHelper output)
@@ -44,7 +45,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            DbUtils.Clean("Spec_SnapshotStore");
+            DbUtils.Clean(OracleSpecs.TableInfo.SnapShotTableName);
         }
     }
 }

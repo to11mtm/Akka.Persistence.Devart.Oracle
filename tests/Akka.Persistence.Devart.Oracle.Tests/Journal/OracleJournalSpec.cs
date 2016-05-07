@@ -7,6 +7,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
     using Akka.Persistence.TestKit.Journal;
     public class OracleJournalSpec:JournalSpec
     {
+
         private static readonly Config SpecConfig;
 
         static OracleJournalSpec()
@@ -19,15 +20,17 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                             devart-oracle {
                                 class = ""Akka.Persistence.Devart.Oracle.Journal.OracleJournal, Akka.Persistence.Devart.Oracle""
                                 plugin-dispatcher = ""akka.actor.default-dispatcher""
-                                table-name = Spec_EventJournal
-                                schema-name = akka_persist_tests
+                                table-name = {TABLE_NAME}
+                                schema-name = {SCHEMA_NAME}
                                 auto-initialize = on
                                 connection-string-name = ""TestDb""
                             }
                         }
-                    }";
+                    }".Replace("{TABLE_NAME}",OracleSpecs.TableInfo.JournalTableName).Replace("{SCHEMA_NAME}",OracleSpecs.TableInfo.SchemaName);
 
             SpecConfig = ConfigurationFactory.ParseString(specString);
+
+            DbUtils.Clean(OracleSpecs.TableInfo.JournalTableName);
         }
 
         public OracleJournalSpec(ITestOutputHelper output) :base(SpecConfig, "OracleJournalSpec", output)
@@ -38,7 +41,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            DbUtils.Clean("Spec_EventJournal");
+            DbUtils.Clean(OracleSpecs.TableInfo.JournalTableName);
         }
     }
 }

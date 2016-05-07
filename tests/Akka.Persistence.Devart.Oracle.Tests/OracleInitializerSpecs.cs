@@ -7,11 +7,12 @@ using Xunit;
 namespace Akka.Persistence.Devart.Oracle
 {
     public class OracleInitializerSpecs
-    {
+   {
+        
         public class CreatingJournalTables
         {
             private string _connectionString;
-            private const string TableName = "EventJournal_Test";
+            
 
             public void GivenTestDbConnectionDetails()
             {
@@ -20,17 +21,17 @@ namespace Akka.Persistence.Devart.Oracle
 
             public void WhenCreatingJournalTables()
             {
-                OracleInitializer.CreateOracleJournalTables(_connectionString, "akka_persist_tests",TableName);
+                OracleInitializer.CreateOracleJournalTables(_connectionString,OracleSpecs.TableInfo.SchemaName ,OracleSpecs.TableInfo.JournalTableName);
             }
 
             public void ThenTheTableShouldExist()
             {
-                DbUtils.CheckIfTableExists(TableName).Should().BeTrue();
+                DbUtils.CheckIfTableExists(OracleSpecs.TableInfo.JournalTableName).Should().BeTrue();
             }
 
             public void TearDown()
             {
-                DbUtils.Clean(TableName);
+                DbUtils.Clean(OracleSpecs.TableInfo.JournalTableName);
             }
 
             [Fact]
@@ -43,7 +44,7 @@ namespace Akka.Persistence.Devart.Oracle
         public class CreatingSnapshotTables
         {
             private string _connectionString;
-            private const string TableName = "SnapshotStore_Test";
+            
 
             public void GivenTestDbConnectionDetails()
             {
@@ -52,17 +53,17 @@ namespace Akka.Persistence.Devart.Oracle
 
             public void WhenCreatingSnapshotTable()
             {
-                OracleInitializer.CreateOracleSnapshotStoreTables(_connectionString, "akka_persist_tests", TableName);
+                OracleInitializer.CreateOracleSnapshotStoreTables(_connectionString, OracleSpecs.TableInfo.SchemaName, OracleSpecs.TableInfo.SnapShotTableName);
             }
 
             public void ThenTheTableShouldExist()
             {
-                DbUtils.CheckIfTableExists(TableName).Should().BeTrue();
+                DbUtils.CheckIfTableExists(OracleSpecs.TableInfo.SnapShotTableName).Should().BeTrue();
             }
 
             public void TearDown()
             {
-                DbUtils.Clean(TableName);
+                DbUtils.Clean(OracleSpecs.TableInfo.SnapShotTableName);
             }
 
             [Fact]
