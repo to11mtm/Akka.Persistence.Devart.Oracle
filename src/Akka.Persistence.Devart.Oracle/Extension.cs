@@ -9,7 +9,7 @@ namespace Akka.Persistence.Devart.Oracle
 
     public class OracleJournalSettings : JournalSettings
     {
-        public const string ConfigPath = "akka.persistence.journal.oracle-managed";
+        public const string ConfigPath = "akka.persistence.journal.devart-oracle";
 
         /// <summary>
         /// Flag determining in in case of event journal table missing, it should be automatically initialized.
@@ -24,7 +24,7 @@ namespace Akka.Persistence.Devart.Oracle
 
     public class OracleSnapshotSettings : SnapshotStoreSettings
     {
-        public const string ConfigPath = "akka.persistence.snapshot-store.oracle-managed";
+        public const string ConfigPath = "akka.persistence.snapshot-store.devart-oracle";
 
         /// <summary>
         /// Flag determining in in case of snapshot store table missing, it should be automatically initialized.
@@ -48,7 +48,7 @@ namespace Akka.Persistence.Devart.Oracle
         /// <returns></returns>
         public static Config DefaultConfiguration()
         {
-            return ConfigurationFactory.FromResource<OraclePersistence>("Akka.Persistence.Oracle.oracle-managed.conf");
+            return ConfigurationFactory.FromResource<OraclePersistence>("Akka.Persistence.Devart.Oracle.devart-oracle.conf");
         }
 
         public static OraclePersistence Get(ActorSystem system)
@@ -84,9 +84,9 @@ namespace Akka.Persistence.Devart.Oracle
 
             if (SnapshotSettings.AutoInitialize)
             {
-                var connectionString = string.IsNullOrEmpty(JournalSettings.ConnectionString)
-                    ? ConfigurationManager.ConnectionStrings[JournalSettings.ConnectionStringName].ConnectionString
-                    : JournalSettings.ConnectionString;
+                var connectionString = string.IsNullOrEmpty(SnapshotSettings.ConnectionString)
+                    ? ConfigurationManager.ConnectionStrings[SnapshotSettings.ConnectionStringName].ConnectionString
+                    : SnapshotSettings.ConnectionString;
 
                 OracleInitializer.CreateOracleSnapshotStoreTables(connectionString, SnapshotSettings.SchemaName, SnapshotSettings.TableName);
             }

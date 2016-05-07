@@ -6,7 +6,7 @@ using Devart.Data.Oracle;
 namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
     /// <summary>
-    /// Actor used for storing incoming snapshots into persistent snapshot store backed by SQL Server database.
+    /// Actor used for storing incoming snapshots into persistent snapshot store backed by an Oracle database.
     /// </summary>
     public class OracleSnapshotStore : SqlSnapshotStore
     {
@@ -21,7 +21,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
 
         protected override DbConnection CreateDbConnection(string connectionString)
         {
-            return new OracleConnection(Settings.ConnectionString);
+            return new OracleConnection(connectionString);
         }
         protected override SnapshotStoreSettings Settings { get { return _extension.SnapshotSettings; } }        
     }

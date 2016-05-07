@@ -1,4 +1,6 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Persistence.Sql.Common.Journal;
 using Devart.Data.Oracle;
@@ -14,24 +16,28 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             : base(system)
         {
             QueryBuilder = new OracleJournalQueryBuilder(Settings.TableName, Settings.SchemaName);
+            QueryMapper = new OracleJournalQueryMapper(system.Serialization);
         }
 
         protected override string JournalConfigPath { get { return OracleJournalSettings.ConfigPath; } }
 
         protected override DbConnection CreateDbConnection(string connectionString)
         {
-            return new OracleConnection(connectionString);
+            return new OracleConnection(connectionString) { NumberMappings = { new OracleNumberMapping(OracleNumberType.Number, 19, typeof(long))}};
         }
 
         protected override void CopyParamsToCommand(DbCommand sqlCommand, JournalEntry entry)
         {
-            sqlCommand.Parameters[":PersistenceId"].Value = entry.PersistenceId;
-            sqlCommand.Parameters[":SequenceNr"].Value = entry.SequenceNr;
-            sqlCommand.Parameters[":IsDeleted"].Value = entry.IsDeleted;
-            sqlCommand.Parameters[":Manifest"].Value = entry.Manifest;
-            sqlCommand.Parameters[":Timestamp"].Value = entry.Timestamp;
-            sqlCommand.Parameters[":Payload"].Value = entry.Payload;
+            sqlCommand.Parameters["Persistence_Id"].Value = entry.PersistenceId;
+            sqlCommand.Parameters["Sequence_Nr"].Value = entry.SequenceNr;
+            sqlCommand.Parameters["Is_Deleted"].Value = entry.IsDeleted ? 'Y' : 'N';
+            sqlCommand.Parameters["Manifest"].Value = entry.Manifest;
+            sqlCommand.Parameters["Time_stamp"].Value = entry.Timestamp;
+            sqlCommand.Parameters["Payload"].Value = entry.Payload;
+        
+        
         }
+
     }
 
     /// <summary>
@@ -44,5 +50,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
         public OracleJournal() : base(new OracleJournalEngine(Context.System))
         {
         }
+
+
     }    
 }

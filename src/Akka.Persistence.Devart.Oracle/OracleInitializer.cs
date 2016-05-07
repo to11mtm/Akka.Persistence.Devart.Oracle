@@ -13,7 +13,7 @@ namespace Akka.Persistence.Devart.Oracle
 
         /// <summary>
         /// Initializes a Oracle journal-related tables according to 'schema-name', 'table-name' 
-        /// and 'connection-string' values provided in 'akka.persistence.journal.oracle-managed' config.
+        /// and 'connection-string' values provided in 'akka.persistence.journal.devart-oracle' config.
         /// </summary>
         public static void CreateOracleJournalTables(string connectionString, string schemaName, string tableName)
         {
@@ -24,7 +24,7 @@ namespace Akka.Persistence.Devart.Oracle
 
         /// <summary>
         /// Initializes a Oracle snapshot store related tables according to 'schema-name', 'table-name' 
-        /// and 'connection-string' values provided in 'akka.persistence.snapshot-store.oracle-managed' config.
+        /// and 'connection-string' values provided in 'akka.persistence.snapshot-store.devart-oracle' config.
         /// </summary>
         public static void CreateOracleSnapshotStoreTables(string connectionString, string schemaName, string tableName)
         {

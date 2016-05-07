@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using Akka.Persistence.Sql.Common.Snapshot;
+using Devart.Data.Oracle;
 
 namespace Akka.Persistence.Devart.Oracle.Snapshot
 {
@@ -17,6 +18,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
         {
             var persistenceId = reader.GetString(0);
             var sequenceNr = reader.GetInt64(1);
+
             var timestamp = reader.GetDateTime(2);
 
             var metadata = new SnapshotMetadata(persistenceId, sequenceNr, timestamp);

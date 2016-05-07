@@ -15,11 +15,11 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
                         akka.persistence {
                             publish-plugin-commands = on
                             snapshot-store {
-                                plugin = ""akka.persistence.snapshot-store.oracle-managed""
-                                oracle-managed {
+                                plugin = ""akka.persistence.snapshot-store.devart-oracle""
+                                devart-oracle {
                                     class = ""Akka.Persistence.Devart.Oracle.Snapshot.OracleSnapshotStore, Akka.Persistence.Devart.Oracle""
                                     plugin-dispatcher = ""akka.actor.default-dispatcher""
-                                    table-name = Spec-SnapshotStore
+                                    table-name = Spec_SnapshotStore
                                     schema-name = akka_persist_tests
                                     auto-initialize = on
                                     connection-string-name = ""TestDb""
@@ -32,7 +32,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
 
             //need to make sure db is created before the tests start
             //DbUtils.Initialize();
-            DbUtils.Clean("Spec-SnapshotStore");
+            DbUtils.Clean("Spec_SnapshotStore");
         }
 
         public OracleSnapshotStoreSpec(ITestOutputHelper output)
@@ -44,7 +44,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            DbUtils.Clean("Spec-SnapshotStore");
+            DbUtils.Clean("Spec_SnapshotStore");
         }
     }
 }

@@ -27,9 +27,9 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             _tableName = tableName;
             _schemaName = schemaName;
 
-            _insertMessagesSql = "INSERT INTO {0}.{1} (PersistenceID, SequenceNr, IsDeleted, PayloadType, Payload) VALUES (:PersistenceId, :SequenceNr, :IsDeleted, :PayloadType, :Payload)"
+            _insertMessagesSql = "INSERT INTO {0}.{1} (Persistence_ID, Sequence_Nr, Is_Deleted, manifest, Payload, Time_Stamp) VALUES (:Persistence_Id, :Sequence_Nr, :Is_Deleted, :manifest, :Payload, :time_stamp)"
                 .QuoteSchemaAndTable(_schemaName, _tableName);
-            _selectHighestSequenceNrSql = @"SELECT MAX(SequenceNr) FROM {0}.{1} WHERE PersistenceID = :pid".QuoteSchemaAndTable(_schemaName, _tableName);
+            _selectHighestSequenceNrSql = @"SELECT cast( MAX(Sequence_Nr) as number(19,0)) FROM {0}.{1} WHERE Persistence_ID = :Persistence_Id".QuoteSchemaAndTable(_schemaName, _tableName);
         }
 
         public DbCommand SelectEvents(IEnumerable<IHint> hints)
@@ -40,7 +40,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                 .Where(x => !string.IsNullOrEmpty(x));
 
             var where = string.Join(" AND ", sqlized);
-            var sql = new StringBuilder("SELECT PersistenceID, SequenceNr, IsDeleted, Manifest, Payload, Timestamp FROM {0}.{1} ".QuoteSchemaAndTable(_schemaName, _tableName));
+            var sql = new StringBuilder("SELECT Persistence_ID, Sequence_Nr, Is_Deleted, Manifest, Payload, Time_stamp FROM {0}.{1} ".QuoteSchemaAndTable(_schemaName, _tableName));
             if (!string.IsNullOrEmpty(where))
             {
                 sql.Append(" WHERE ").Append(where);
@@ -59,13 +59,13 @@ namespace Akka.Persistence.Devart.Oracle.Journal
 
                 if (range.From.HasValue)
                 {
-                    sb.Append(" Timestamp >= :TimestampFrom ");
+                    sb.Append(" Time_stamp >= :TimestampFrom ");
                     command.Parameters.AddWithValue(":TimestampFrom", range.From.Value);
                 }
                 if (range.From.HasValue && range.To.HasValue) sb.Append("AND");
                 if (range.To.HasValue)
                 {
-                    sb.Append(" Timestamp < :TimestampTo ");
+                    sb.Append(" Time_stamp < :TimestampTo ");
                     command.Parameters.AddWithValue(":TimestampTo", range.To.Value);
                 }
 
@@ -74,7 +74,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             if (hint is PersistenceIdRange)
             {
                 var range = (PersistenceIdRange)hint;
-                var sb = new StringBuilder(" PersistenceID IN (");
+                var sb = new StringBuilder(" Persistence_ID IN (");
                 var i = 0;
                 foreach (var persistenceId in range.PersistenceIds)
                 {
@@ -119,13 +119,19 @@ namespace Akka.Persistence.Devart.Oracle.Journal
         public DbCommand InsertBatchMessages(IPersistentRepresentation[] messages)
         {
             var command = new OracleCommand(_insertMessagesSql);
-            command.Parameters.Add(":PersistenceId", SqlDbType.NVarChar);
-            command.Parameters.Add(":SequenceNr", SqlDbType.BigInt);
-            command.Parameters.Add(":IsDeleted", SqlDbType.Char);
-            command.Parameters.Add(":PayloadType", SqlDbType.NVarChar);
+            command.Parameters.Add(":Persistence_Id", SqlDbType.NVarChar);
+            command.Parameters.Add(":Sequence_Nr", SqlDbType.BigInt);
+            command.Parameters.Add(":Is_Deleted", SqlDbType.Char);
+            command.Parameters.Add(":Manifest", SqlDbType.NVarChar);
+            command.Parameters.Add(":time_stamp", OracleDbType.TimeStamp);
             command.Parameters.Add(":Payload", SqlDbType.VarBinary);
 
             return command;
+        }
+
+        public DbCommand DeleteBatchMessages(string persistenceId, long toSequenceNr)
+        {
+            return DeleteBatchMessages(persistenceId, toSequenceNr, true);
         }
 
         public DbCommand DeleteBatchMessages(string persistenceId, long toSequenceNr, bool permanent)
@@ -149,14 +155,14 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             }
             else
             {
-                sqlBuilder.Append("UPDATE {0}.{1} SET IsDeleted = 'Y' ".QuoteSchemaAndTable(_schemaName, _tableName));
+                sqlBuilder.Append("UPDATE {0}.{1} SET Is_Deleted = 'Y' ".QuoteSchemaAndTable(_schemaName, _tableName));
             }
 
-            sqlBuilder.Append("WHERE PersistenceId = :pid");
+            sqlBuilder.Append("WHERE Persistence_Id = :Persistence_Id");
 
             if (toSequenceNr != long.MaxValue)
             {
-                sqlBuilder.Append(" AND SequenceNr <= ").Append(toSequenceNr);
+                sqlBuilder.Append(" AND Sequence_Nr <= ").Append(toSequenceNr);
             }
 
             var sql = sqlBuilder.ToString();
@@ -168,16 +174,16 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             var sqlBuilder = new StringBuilder();
             sqlBuilder.Append(
                 @"SELECT
-                    PersistenceID,
-                    SequenceNr,
-                    IsDeleted,
+                    Persistence_ID,
+                    Sequence_Nr,
+                    Is_Deleted,
                     Manifest,
                     Payload ")
-                .Append(" FROM {0}.{1} WHERE PersistenceId = :pid".QuoteSchemaAndTable(_schemaName, _tableName));
+                .Append(" FROM {0}.{1} WHERE Persistence_Id = :Persistence_Id".QuoteSchemaAndTable(_schemaName, _tableName));
 
             if (max != long.MaxValue)
             {
-                sqlBuilder.AppendFormat(" AND ROWNUM < {0}", max);
+                sqlBuilder.AppendFormat(" AND ROWNUM <= {0}", max);
             }
 
             // since we guarantee type of fromSequenceNr, toSequenceNr and max
@@ -186,16 +192,16 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             if (fromSequenceNr > 0)
             {
                 if (toSequenceNr != long.MaxValue)
-                    sqlBuilder.Append(" AND SequenceNr BETWEEN ")
+                    sqlBuilder.Append(" AND Sequence_Nr BETWEEN ")
                         .Append(fromSequenceNr)
                         .Append(" AND ")
                         .Append(toSequenceNr);
                 else
-                    sqlBuilder.Append(" AND SequenceNr >= ").Append(fromSequenceNr);
+                    sqlBuilder.Append(" AND Sequence_Nr >= ").Append(fromSequenceNr);
             }
 
             if (toSequenceNr != long.MaxValue)
-                sqlBuilder.Append(" AND SequenceNr <= ").Append(toSequenceNr);
+                sqlBuilder.Append(" AND Sequence_Nr <= ").Append(toSequenceNr);
 
             var sql = sqlBuilder.ToString();
             return sql;
@@ -203,7 +209,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
 
         private static OracleParameter PersistenceIdToSqlParam(string persistenceId, string paramName = null)
         {
-            return new OracleParameter(paramName ?? ":pid", OracleDbType.NVarChar, persistenceId.Length) { Value = persistenceId };
+            return new OracleParameter(paramName ?? ":Persistence_Id", OracleDbType.NVarChar, persistenceId.Length) { Value = persistenceId };
         }
     }
 }

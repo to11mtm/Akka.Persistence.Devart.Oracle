@@ -15,11 +15,11 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                     akka.persistence {
                         publish-plugin-commands = on
                         journal {
-                            plugin = ""akka.persistence.journal.oracle-managed""
-                            oracle-managed {
+                            plugin = ""akka.persistence.journal.devart-oracle""
+                            devart-oracle {
                                 class = ""Akka.Persistence.Devart.Oracle.Journal.OracleJournal, Akka.Persistence.Devart.Oracle""
                                 plugin-dispatcher = ""akka.actor.default-dispatcher""
-                                table-name = Spec-EventJournal
+                                table-name = Spec_EventJournal
                                 schema-name = akka_persist_tests
                                 auto-initialize = on
                                 connection-string-name = ""TestDb""
@@ -30,7 +30,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             SpecConfig = ConfigurationFactory.ParseString(specString);
         }
 
-        public OracleJournalSpec(ITestOutputHelper output) :base(Config, "OracleJournalSpec", output)
+        public OracleJournalSpec(ITestOutputHelper output) :base(SpecConfig, "OracleJournalSpec", output)
         {
             Initialize();
         }
@@ -38,7 +38,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            DbUtils.Clean("Spec-EventJournal");
+            DbUtils.Clean("Spec_EventJournal");
         }
     }
 }
