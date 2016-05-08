@@ -39,7 +39,7 @@ namespace Akka.Persistence.Devart.Oracle.Journal
             // timestamp is SQL-journal specific field, it's not a part of casual Persistent instance  
             var payload = GetPayload(reader, manifest);
 
-            return new Persistent(payload, sequenceNr, manifest,persistenceId, isDeleted, sender);
+            return new Persistent(payload, sequenceNr: sequenceNr, persistenceId: persistenceId, manifest: manifest, isDeleted: isDeleted, sender: sender);
         }
 
         private object GetPayload(DbDataReader reader, string manifest)
