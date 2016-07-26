@@ -11,14 +11,8 @@ namespace Akka.Persistence.Devart.Oracle
     {
         public const string ConfigPath = "akka.persistence.journal.devart-oracle";
 
-        /// <summary>
-        /// Flag determining in in case of event journal table missing, it should be automatically initialized.
-        /// </summary>
-        public bool AutoInitialize { get; private set; }
-
         public OracleJournalSettings(Config config) : base(config)
         {
-            AutoInitialize = config.GetBoolean("auto-initialize");
         }
     }
 
@@ -26,19 +20,13 @@ namespace Akka.Persistence.Devart.Oracle
     {
         public const string ConfigPath = "akka.persistence.snapshot-store.devart-oracle";
 
-        /// <summary>
-        /// Flag determining in in case of snapshot store table missing, it should be automatically initialized.
-        /// </summary>
-        public bool AutoInitialize { get; private set; }
-
         public OracleSnapshotSettings(Config config) : base(config)
         {
-            AutoInitialize = config.GetBoolean("auto-initialize");
         }
     }
 
     /// <summary>
-    /// An actor system extension initializing support for SQL Server persistence layer.
+    /// An actor system extension initializing support for Oracle persistence layer.
     /// </summary>
     public class OraclePersistence : IExtension
     {
@@ -56,40 +44,24 @@ namespace Akka.Persistence.Devart.Oracle
             return system.WithExtension<OraclePersistence, OraclePersistenceProvider>();
         }
 
+
         /// <summary>
         /// Journal-related settings loaded from HOCON configuration.
         /// </summary>
-        public readonly OracleJournalSettings JournalSettings;
+        public readonly Config DefaultJournalConfig;
 
         /// <summary>
         /// Snapshot store related settings loaded from HOCON configuration.
         /// </summary>
-        public readonly OracleSnapshotSettings SnapshotSettings;
+        public readonly Config DefaultSnapshotConfig;
 
         public OraclePersistence(ExtendedActorSystem system)
         {
-            system.Settings.InjectTopLevelFallback(DefaultConfiguration());
+            var defaultConfig = DefaultConfiguration();
+            system.Settings.InjectTopLevelFallback(defaultConfig);
 
-            JournalSettings = new OracleJournalSettings(system.Settings.Config.GetConfig(OracleJournalSettings.ConfigPath));
-            SnapshotSettings = new OracleSnapshotSettings(system.Settings.Config.GetConfig(OracleSnapshotSettings.ConfigPath));
-
-            if (JournalSettings.AutoInitialize)
-            {
-                var connectionString = string.IsNullOrEmpty(JournalSettings.ConnectionString)
-                    ? ConfigurationManager.ConnectionStrings[JournalSettings.ConnectionStringName].ConnectionString
-                    : JournalSettings.ConnectionString;
-
-                OracleInitializer.CreateOracleJournalTables(connectionString, JournalSettings.SchemaName, JournalSettings.TableName);
-            }
-
-            if (SnapshotSettings.AutoInitialize)
-            {
-                var connectionString = string.IsNullOrEmpty(SnapshotSettings.ConnectionString)
-                    ? ConfigurationManager.ConnectionStrings[SnapshotSettings.ConnectionStringName].ConnectionString
-                    : SnapshotSettings.ConnectionString;
-
-                OracleInitializer.CreateOracleSnapshotStoreTables(connectionString, SnapshotSettings.SchemaName, SnapshotSettings.TableName);
-            }
+            DefaultJournalConfig = defaultConfig.GetConfig(OracleJournalSettings.ConfigPath);
+            DefaultSnapshotConfig = defaultConfig.GetConfig(OracleSnapshotSettings.ConfigPath);
         }
     }
 
@@ -99,7 +71,7 @@ namespace Akka.Persistence.Devart.Oracle
     public class OraclePersistenceProvider : ExtensionIdProvider<OraclePersistence>
     {        
         /// <summary>
-        /// Creates an actor system extension for akka persistence SQL Server support.
+        /// Creates an actor system extension for akka persistence Oracle support.
         /// </summary>
         /// <param name="system"></param>
         /// <returns></returns>

@@ -9,64 +9,41 @@ namespace Akka.Persistence.Devart.Oracle
 
     internal static class InternalExtensions
     {
-        public static string QuoteSchemaAndTable(this string sqlQuery, string schemaName, string tableName)
-        {
-            var cb = new OracleCommandBuilder();
-            return string.Format(sqlQuery, cb.QuoteIdentifier(schemaName), cb.QuoteIdentifier(tableName));
-        }
 
-        public static string UnquoteIdentifierIfQuoted(this string identifier)
+        public static string WrapOptimisticCreateIfNotExists(string createStatement)
         {
-            if (!string.IsNullOrWhiteSpace(identifier))
-            {
-                var cb = new OracleCommandBuilder();
-                if (identifier.StartsWith(cb.QuotePrefix) && identifier.EndsWith(cb.QuoteSuffix))
-                {
-                    return cb.UnquoteIdentifier(identifier);
-                }
-            }            
-            return identifier;
-        }
-
-        public static string UnquoteIdentifierIfQuoted(this OracleCommandBuilder commandBuilder, string identifier)
-        {
-            if (commandBuilder == null)
-            {
-                throw new ArgumentNullException("commandBuilder");
-            }
-            if (!string.IsNullOrWhiteSpace(identifier))
-            {
-                if (identifier.StartsWith(commandBuilder.QuotePrefix) && identifier.EndsWith(commandBuilder.QuoteSuffix))
-                {
-                    return commandBuilder.UnquoteIdentifier(identifier);
-                }
-            }
-            return identifier;
+            return String.Format(@"BEGIN
+    BEGIN
+        EXECUTE IMMEDIATE '{0}';
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -955 THEN
+                null; --Already exists, we're fine.
+            END IF;
+    END;
+END;", createStatement);
         }
 
         /// <summary>
-        /// Adds a value to the end of the <see cref="T:Oracle.ManagedDataAccess.Client.OracleParameterCollection"/>.
+        /// Takes an Insert Statement and Updates Statement and wraps them into an optimistic (Insert, Update if Not Present)
+        /// Upsert Statement.
+        /// We do this because it's the 'fastest' and 'most clear' upsert in oracle.
         /// </summary>
-        /// 
-        /// <returns>
-        /// A <see cref="T:System.ManagedDataAccess.Client.OracleParameter"/> object.
-        /// </returns>
-        /// <param name="this"></param>
-        /// <param name="parameterName">The name of the parameter.</param><param name="value">The value to be added. Use <see cref="F:System.DBNull.Value"/> instead of null, to indicate a null value.</param><filterpriority>2</filterpriority> 
-        public static OracleParameter AddWithValue(this OracleParameterCollection @this, string parameterName, object value)
+        /// <param name="saneInsertStatement">The Insert Statement to use</param>
+        /// <param name="saneUpdateStatement">The Update Statement to use when insert fails</param>
+        /// <returns></returns>
+        public static string AsOptimisticUpsert(string saneInsertStatement, string saneUpdateStatement)
         {
-            return @this.Add(new OracleParameter(parameterName, value));
-        }
-
-        public static string GetEmbeddedResourceText(this Assembly assembly, string resourceName)
-        {
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
-            {
-                using (var reader = new StreamReader(stream))
-                {
-                    return reader.ReadToEnd();
-                }
-            }
+            return string.Format(@"BEGIN
+    BEGIN
+        {0}
+    EXCEPTION
+        WHEN OTHERS THEN
+            IF SQLCODE = -1 THEN
+              {1}
+            END IF;
+    END;
+END;", saneInsertStatement, saneUpdateStatement);
         }
     }
 }
