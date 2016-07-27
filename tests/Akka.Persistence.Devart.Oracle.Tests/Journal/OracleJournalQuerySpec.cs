@@ -3,7 +3,7 @@ using Akka.Configuration;
 using Akka.Persistence.Sql.TestKit;
 using Xunit.Abstractions;
 
-namespace Akka.Persistence.Devart.Oracle.Journal.Query
+namespace Akka.Persistence.Devart.Oracle.Journal
 {
     public class OracleJournalQuerySpec : SqlJournalQuerySpec
     {

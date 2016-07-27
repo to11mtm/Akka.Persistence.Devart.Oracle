@@ -12,7 +12,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
 
         public OracleSnapshotStoreSpec(ITestOutputHelper output)
             : base(
-                CreateSpecConfig(""), "OracleSnapshotStoreSpec",output)
+                CreateSpecConfig(), "OracleSnapshotStoreSpec",output)
         {
             OraclePersistence.Get(Sys);
 
@@ -25,7 +25,7 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
             base.Dispose(disposing);
         }
 
-        private static Config CreateSpecConfig(string smth)
+        private static Config CreateSpecConfig()
         {
             var specString =
                 (@"

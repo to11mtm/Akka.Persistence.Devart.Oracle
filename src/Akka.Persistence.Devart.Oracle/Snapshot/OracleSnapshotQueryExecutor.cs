@@ -88,26 +88,11 @@ namespace Akka.Persistence.Devart.Oracle.Snapshot
                 configuration.TimestampColumnName, configuration.ManifestColumnName, configuration.PayloadColumnName,
                 configuration.PersistenceIdColumnName, configuration.SequenceNrColumnName);
 
-            var optimisticUpsert = AsOptimisticUpsert(saneInsertStatement, saneUpdateStatement);
+            var optimisticUpsert = InternalExtensions.AsOptimisticUpsert(saneInsertStatement, saneUpdateStatement);
             _insertSnapshotSql = optimisticUpsert;
 
         }
-
         
-
-        public static string AsOptimisticUpsert(string saneInsertStatement, string saneUpdateStatement)
-        {
-            return string.Format(@"BEGIN
-    BEGIN
-        {0}
-    EXCEPTION
-        WHEN OTHERS THEN
-            IF SQLCODE = -1 THEN
-              {1}
-            END IF;
-    END;
-END;",saneInsertStatement, saneUpdateStatement);
-        }
 
         protected override string SelectSnapshotSql
         {
@@ -199,8 +184,9 @@ END;",saneInsertStatement, saneUpdateStatement);
             await base.InsertAsync(connection, cancellationToken, snapshot, metadata);
         }
 
-        public new async Task<SelectedSnapshot> SelectSnapshotAsync(DbConnection connection, CancellationToken cancellationToken, string persistenceId,
-    long maxSequenceNr, DateTime maxTimestamp)
+        public new async Task<SelectedSnapshot> SelectSnapshotAsync(DbConnection connection,
+            CancellationToken cancellationToken, string persistenceId,
+            long maxSequenceNr, DateTime maxTimestamp)
         {
             using (var command = GetCommand(connection, SelectSnapshotSql))
             {

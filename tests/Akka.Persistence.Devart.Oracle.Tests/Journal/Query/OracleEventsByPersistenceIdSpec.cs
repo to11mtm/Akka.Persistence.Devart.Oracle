@@ -1,31 +1,15 @@
 ﻿using Akka.Configuration;
-using Akka.Persistence.TestKit.Journal;
+using Akka.Persistence.Sql.TestKit;
 using Xunit.Abstractions;
 
-namespace Akka.Persistence.Devart.Oracle.Journal
+namespace Akka.Persistence.Devart.Oracle.Journal.Query
 {
-
-    public class OracleJournalSpec : JournalSpec
+    public class OracleEventsByPersistenceIdSpec : EventsByPersistenceIdSpec
     {
-
-        public OracleJournalSpec(ITestOutputHelper output)
-            : base(CreateSpecConfig(), "OracleJournalSpec", output)
-        {
-            OraclePersistence.Get(Sys);
-
-            Initialize();
-        }
-
-
-        protected override void Dispose(bool disposing)
-        {
-            DbUtils.Clean(OracleSpecs.TableInfo.JournalTableName, OracleSpecs.TableInfo.SnapShotTableName, OracleSpecs.TableInfo.JournalMetaDataTableName);
-            base.Dispose(disposing);
-        }
-
-        private static Config CreateSpecConfig()
+        public static Config Config()
         {
             var specString = @"
+                    akka.test.single-expect-default = 3s
                     akka.persistence {
                         publish-plugin-commands = on
                         journal {
@@ -40,12 +24,20 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                                 connection-string-name = ""TestDb""
                             }
                         }
-                    }".Replace("{TABLE_NAME}", OracleSpecs.TableInfo.JournalTableName).Replace("{SCHEMA_NAME}", OracleSpecs.TableInfo.SchemaName).Replace("{JOURNAL_METADATA}",OracleSpecs.TableInfo.JournalMetaDataTableName);
+                    }".Replace("{TABLE_NAME}", OracleSpecs.TableInfo.JournalTableName)
+                .Replace("{SCHEMA_NAME}", OracleSpecs.TableInfo.SchemaName)
+                .Replace("{JOURNAL_METADATA}", OracleSpecs.TableInfo.JournalMetaDataTableName);
 
             return ConfigurationFactory.ParseString(specString);
-            
+
+        }
+        protected override void Dispose(bool disposing)
+        {
+            DbUtils.Clean(OracleSpecs.TableInfo.JournalTableName, OracleSpecs.TableInfo.SnapShotTableName, OracleSpecs.TableInfo.JournalMetaDataTableName);
+            base.Dispose(disposing);
+        }
+        public OracleEventsByPersistenceIdSpec(ITestOutputHelper output) : base(Config(), output)
+        {
         }
     }
-
-    
 }

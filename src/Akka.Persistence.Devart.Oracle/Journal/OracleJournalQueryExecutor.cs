@@ -63,12 +63,21 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                 configuration.SequenceNrColumnName);
             _createMetaTableSql = InternalExtensions.WrapOptimisticCreateIfNotExists(createMetaStatement);
 
-            var allEventColumnNames = String.Format(@"e.{0} as PersistenceId, 
+            AllEventColumnNames = String.Format(@"e.{0} as PersistenceId, 
                 e.{1} as SequenceNr, 
                 e.{2} as Timestamp, 
                 e.{3} as IsDeleted, 
                 e.{4} as Manifest, 
                 e.{5} as Payload", Configuration.PersistenceIdColumnName, Configuration.SequenceNrColumnName,
+                Configuration.TimestampColumnName, Configuration.IsDeletedColumnName, Configuration.ManifestColumnName,
+                Configuration.PayloadColumnName);
+
+            AllEventColumnNamesforRownum = String.Format(@"rn.{0} as PersistenceId, 
+                rn.{1} as SequenceNr, 
+                rn.{2} as Timestamp, 
+                rn.{3} as IsDeleted, 
+                rn.{4} as Manifest, 
+                rn.{5} as Payload", Configuration.PersistenceIdColumnName, Configuration.SequenceNrColumnName,
                 Configuration.TimestampColumnName, Configuration.IsDeletedColumnName, Configuration.ManifestColumnName,
                 Configuration.PayloadColumnName);
 
@@ -97,17 +106,21 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                 String.Format(@"SELECT {0}
                 FROM {1} e
                 WHERE e.{2} = :PersistenceId
-                AND e.{3} BETWEEN :FromSequenceNr AND :ToSequenceNr", allEventColumnNames,
+                AND e.{3} BETWEEN :FromSequenceNr AND :ToSequenceNr
+                ORDER BY e.{3}", AllEventColumnNames,
                     Configuration.FullJournalTableName, Configuration.PersistenceIdColumnName,
                     Configuration.SequenceNrColumnName);
 
-            _byTagSql =
-                String.Format(@"SELECT {0}
+            var bytaginnerselect = string.Format(@"SELECT {0},
+                row_number() over (ORDER BY {2},{3}) as skiptake
                 FROM {1} e
                 WHERE e.{2} LIKE :Tag
-                ORDER BY {3}, {4}", allEventColumnNames, Configuration.FullJournalTableName,
+                ORDER BY {3}, {4}", AllEventColumnNames, Configuration.FullJournalTableName,
                     Configuration.TagsColumnName, Configuration.PersistenceIdColumnName,
                     Configuration.SequenceNrColumnName);
+            _byTagSql = string.Format(@"select {0} from ({1}) rn where skiptake > :Skip and skiptake <= :Take",
+                AllEventColumnNamesforRownum, bytaginnerselect);
+                
 
             _insertEventSql = String.Format(@"INSERT INTO {0} (
                     {1},
@@ -132,6 +145,10 @@ namespace Akka.Persistence.Devart.Oracle.Journal
 
 
         }
+
+        public string AllEventColumnNames { get; protected set; }
+
+        public string AllEventColumnNamesforRownum { get; protected set; }
 
         protected override DbCommand CreateCommand(DbConnection connection)
         {
@@ -246,6 +263,9 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                 AddParameter(command, ":Skip", DbType.Int64, fromOffset - 1);
                 AddParameter(command, ":Take", DbType.Int64, take);
 
+                try
+                {
+
                 using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                 {
                     var maxSequenceNr = 0L;
@@ -258,6 +278,13 @@ namespace Akka.Persistence.Devart.Oracle.Journal
                     }
 
                     return maxSequenceNr;
+                }
+
+                }
+                catch (Exception ex)
+                {
+                    System.Console.WriteLine(ex);
+                    throw;
                 }
             }
         }
